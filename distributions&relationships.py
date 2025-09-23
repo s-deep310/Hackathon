@@ -33,3 +33,4 @@ df = pd.DataFrame({
     "bought": bought.astype(bool)
 })
 print(df.head())
+df.to_csv("my_synth.csv", index=False)
