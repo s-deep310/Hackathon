@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+from pathlib import Path
 from pages import (
     dashboard,
     incident_analysis_crew,
@@ -8,24 +9,66 @@ from pages import (
     settings,
     workflow_visual,
     login,
+    logout,
     rag_qa,
     user_crud,
     department_crud,
-    company_crud
+    company_crud,
+    role_crud,
+    rag_matrics_report,
+    rag_metadata_report,
+    chunk_embedding_report
 )
 
 load_dotenv()
+
+# --- TCS LOGO ---
+logo_path = Path("/home/samyadeep/Documents/Hackathon_TCS/ai-project-scafold-main/src/epoch_explorer/tcs_logo.png")
+
+def tcs_header():
+    if logo_path.exists():
+        st.image(str(logo_path), width=140)
+    else:
+        st.warning("TCS logo not found. Place it in /epoch_explorer/assets/tcs_logo.png")
+
+    st.markdown("<h2 style='margin-top:-10px;'></h2>", unsafe_allow_html=True)
+
+tcs_header()
 st.set_page_config(page_title="Incident IQ", page_icon="🚨", layout="wide")
 
-if 'user_logged_in' not in st.session_state:
+# -------------------------------------------------
+# 1️⃣ Initialize session
+# -------------------------------------------------
+if "user_logged_in" not in st.session_state:
     st.session_state.user_logged_in = False
     st.session_state.username = None
 
-# if not logged in, show login page only
+
+# -------------------------------------------------
+# 2️⃣ If logout request → clear and rerun
+# -------------------------------------------------
+if st.session_state.get("logout_triggered"):
+    # clear everything safely
+    for key in ["user_logged_in", "username", "id", "roles", "role"]:
+        if key in st.session_state:
+            del st.session_state[key]
+
+    st.session_state.user_logged_in = False
+    st.session_state.logout_triggered = False
+    st.rerun()  # redirect to login instantly
+
+
+# -------------------------------------------------
+# 3️⃣ If NOT logged in → show ONLY login page
+# -------------------------------------------------
 if not st.session_state.user_logged_in:
     login.show()
-    st.stop()
+    st.stop()   # IMPORTANT: stops rendering rest of UI
 
+
+# -------------------------------------------------
+# 4️⃣ Logged In → Main UI starts here
+# -------------------------------------------------
 def tcs_footer():
     st.markdown("""
     <div style='text-align: center; padding: 10px; color: gray; font-size: 12px;'>
@@ -34,18 +77,44 @@ def tcs_footer():
     </div>
     """, unsafe_allow_html=True)
 
-# Top user info (kept minimal)
-col1, col2 = st.columns([6, 1])
+# Top right profile and logout
+
+col1, col2, col3 = st.columns([6, 1, 1])
+
 with col2:
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="background:#8B5CF6;color:white;width:32px;height:32px;border-radius:50%;
-                  display:flex;align-items:center;justify-content:center;font-weight:600;">
-        {st.session_state.username[0].upper() if st.session_state.username else "U"}
-      </div>
-      <div style="font-weight:500;">{st.session_state.username or "User"}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="
+            background:#8B5CF6;
+            color:white;
+            width:32px;height:32px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:600;
+            margin-top:6px;
+        ">
+            {st.session_state.username[0].upper() if st.session_state.username else "U"}
+        </div>
+        <div style="font-weight:500;">{st.session_state.username or "User"}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with col3:
+    logout = st.button("Logout", type="primary", key="logout_button", help="Click to logout")
+
+if logout:
+    st.session_state.clear()
+    st.rerun()
+
+
+
+# -------------------------------------------------
+# Sidebar Navigation
+# -------------------------------------------------
 
 pages = [
     st.Page("pages/dashboard.py", title="Dashboard", icon="📊"),
@@ -53,55 +122,59 @@ pages = [
     st.Page("pages/reports_incidents.py", title="Incidents Report", icon="📋"),
     st.Page("pages/reports_alerts.py", title="Alerts Report", icon="🔔"),
     st.Page("pages/user_crud.py", title="User Management", icon="👤"),
+    st.Page("pages/role_crud.py", title="Role Management", icon="🔑"),
     st.Page("pages/department_crud.py", title="Department Management", icon="🏬"),
     st.Page("pages/company_crud.py", title="Company Management", icon="🏢"),
+
+    st.Page("pages/rag_matrics_report.py", title="Rag Matrics", icon="📊"),
+    st.Page("pages/rag_metadata_report.py", title="Rag Metadata", icon="📊"),
+    st.Page("pages/chunk_embedding_report.py", title="Chunk Embedding", icon="📊"),
+
     st.Page("pages/workflow_visual.py", title="Workflow Visualization", icon="🧩"),
     st.Page("pages/settings.py", title="Settings", icon="⚙️"),
     st.Page("pages/rag_qa.py", title="Rag Q&A", icon="📚"),
 ]
 
-with st.sidebar:
-    st.markdown("<h1 style='font-size:20px'>Application</h1>", unsafe_allow_html=True)
-    st.divider()
+
 
 page = st.navigation(pages)
 title = getattr(page, "title", "Dashboard")
 
-# Route by title and call each module's .show()
+# -------------------------------------------------
+# Routing
+# -------------------------------------------------
+
+    
 if title == "Dashboard":
     dashboard.show()
-    tcs_footer()
-elif title == "Rag Q&A":
-    rag_qa.show()
-    tcs_footer()
 elif title == "Analyze Incident":
     incident_analysis_crew.show()
-    tcs_footer()
 elif title == "Incidents Report":
     reports_incidents.show()
-    tcs_footer()
-elif title == "Approve Suggestions":
-    admin_approvals.show()
-    tcs_footer()
 elif title == "Alerts Report":
     reports_alerts.show()
-    tcs_footer()
 elif title == "User Management":
     user_crud.show()
-    tcs_footer()
+elif title == "Role Management":
+    role_crud.show()
 elif title == "Department Management":
     department_crud.show()
-    tcs_footer()
 elif title == "Company Management":
     company_crud.show()
-    tcs_footer()
 elif title == "Workflow Visualization":
     workflow_visual.show()
-    tcs_footer()
 elif title == "Settings":
     settings.show()
-    tcs_footer()
-elif title == "Logout" or title == "🔐 Logout":
-    st.session_state.user_logged_in = False
-    st.session_state.username = None
-    st.experimental_rerun()
+elif title == "Rag Q&A":
+    rag_qa.show()
+elif page == "logout":
+    logout.show()
+elif title == "Rag Matrics":
+    rag_matrics_report.show()
+elif title == "Rag Metadata":
+    rag_metadata_report.show()
+elif title == "Chunk Embedding":
+    chunk_embedding_report.show()
+
+
+tcs_footer()
