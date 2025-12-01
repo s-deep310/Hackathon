@@ -1,95 +1,3 @@
-# import streamlit as st
-# import altair as alt
-# from epoch_explorer.database.db.connection import get_connection
-# from epoch_explorer.database.models.rag_history_model import RAGHistoryModel
-
-# def show():
-#     st.title("📊 RAG Observability Dashboard")
-
-#     conn = get_connection()
-#     rag_history = RAGHistoryModel(conn)
-#     df = rag_history.get_metrix()
-
-#     # --- Filters ---
-#     event_filter = st.multiselect("Event Type", df.event_type.unique())
-#     if event_filter:
-#         df = df[df.event_type.isin(event_filter)]
-
-#     # ---- Prepare All Charts as a List ----
-
-#     # 1️⃣ Event Distribution
-#     chart1 = (
-#         alt.Chart(df)
-#         .mark_bar()
-#         .encode(x="event_type", y="count()", color="event_type")
-#         .properties(title="Event Type Distribution")
-#     )
-
-#     # 2️⃣ Accuracy Chart
-#     acc_df = df[df.event_type.isin(["QUERY", "SYNTHETIC_TEST"])].copy()
-#     acc_df["accuracy"] = acc_df["metrics"].apply(lambda m: m.get("accuracy"))
-#     acc_df = acc_df.dropna(subset=["accuracy"])
-
-#     chart2 = (
-#         alt.Chart(acc_df)
-#         .mark_line(point=True)
-#         .encode(x="timestamp:T", y="accuracy:Q", color="event_type")
-#         .properties(title="Accuracy Over Time")
-#     )
-
-#     # 3️⃣ Latency Chart
-#     acc_df["latency"] = acc_df["metrics"].apply(lambda m: m.get("latency"))
-
-#     chart3 = (
-#         alt.Chart(acc_df)
-#         .mark_line(point=True)
-#         .encode(x="timestamp:T", y="latency:Q", color="event_type")
-#         .properties(title="Latency Over Time")
-#     )
-
-#     # 4️⃣ RL Action Bar Chart
-#     chart4 = (
-#         alt.Chart(df[df.action_taken.notnull()])
-#         .mark_bar()
-#         .encode(x="action_taken", y="count()", color="action_taken")
-#         .properties(title="RL Agent Actions")
-#     )
-
-#     # 5️⃣ Reward Trend
-#     chart5 = (
-#         alt.Chart(df.dropna(subset=["reward_signal"]))
-#         .mark_line(point=True)
-#         .encode(x="timestamp:T", y="reward_signal:Q")
-#         .properties(title="Reward Signal Trend")
-#     )
-
-#     charts = [chart1, chart2, chart3, chart4, chart5]
-
-#     # ---- Carousel State ----
-#     if "chart_index" not in st.session_state:
-#         st.session_state.chart_index = 0
-
-#     # ---- Show Current Chart ----
-#     current_chart = charts[st.session_state.chart_index]
-#     st.altair_chart(current_chart, use_container_width=True)
-
-#     # ---- Navigation Buttons ----
-#     col1, col2, col3 = st.columns([1,2,1])
-
-#     with col1:
-#         if st.button("⬅ Previous"):
-#             st.session_state.chart_index = (st.session_state.chart_index - 1) % len(charts)
-
-#     with col3:
-#         if st.button("Next ➡"):
-#             st.session_state.chart_index = (st.session_state.chart_index + 1) % len(charts)
-
-#     # Optional: Show counter
-#     st.write(f"Chart {st.session_state.chart_index + 1} of {len(charts)}")
-
-
-
-
 
 import streamlit as st
 import altair as alt
@@ -106,7 +14,7 @@ def show():
     # -------------------------
     # 🔘 Compact Mode Toggle
     # -------------------------
-    compact_mode = st.toggle("🧩 Compact Mode", value=False)
+    compact_mode = st.toggle("🧩 Compact Mode", value=True)
 
     # Filters
     event_filter = st.multiselect("Event Type", df.event_type.unique())
